@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TP_Final_Programacion.Interfaces;
 using TP_Final_Programacion.DTOs;
+using TP_Final_Programacion.Models;
 
 namespace TP_Final_Programacion.Controllers
 {
@@ -17,14 +18,25 @@ namespace TP_Final_Programacion.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TransactionsDTO>>> Get()
+        public async Task<ActionResult<IEnumerable<Transactions>>> Get()
         {
             var transactions = await _transaccionesServices.Get();
             return Ok(transactions);
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Transactions>> GetById(int id)
+        {
+            var transaction = await _transaccionesServices.GetByid(id);
+            if (transaction == null)
+            {
+                return NotFound();
+            }
+            return Ok(transaction);
+        }
+
         [HttpPost]
-        public async Task<ActionResult<TransactionsDTO>> Post(TransactionsDTO transactionsDTO)
+        public async Task<ActionResult> Post(TransactionsDTO transactionsDTO)
         {
             if (transactionsDTO == null)
             {
@@ -32,6 +44,52 @@ namespace TP_Final_Programacion.Controllers
             }
             var transaction = await _transaccionesServices.Post(transactionsDTO);
             return Ok(transaction);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Put(int id, TransactionsDTO transactionsDTO)
+        {
+            if (transactionsDTO == null || id != transactionsDTO.Id)
+            {
+                return BadRequest();
+            }
+
+            // El servicio devuelve un bool (true si se modificó, false si no se encontró)
+            bool modificado = await _transaccionesServices.Put(id, transactionsDTO);
+
+            if (!modificado)
+            {
+                return NotFound();
+            }
+
+            return NoContent(); // Código 204 estándar para PUT exitoso sin contenido
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var transaction = await _transaccionesServices.GetByid(id);
+            if (transaction == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                bool eliminado = await _transaccionesServices.Delete(id);
+                if (!eliminado)
+                {
+                    return NotFound();
+                }
+
+                return NoContent(); // Código 204 estándar para DELETE exitoso
+            }
+            catch (Exception ex)
+            {
+                // Captura errores de SQL (ej: claves foráneas) para evitar el Error 500
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { mensaje = "No se pudo eliminar la transacción. Verifique si está vinculada a otros datos.", detalle = ex.Message });
+            }
         }
     }
 }

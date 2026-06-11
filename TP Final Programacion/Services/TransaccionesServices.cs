@@ -5,20 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using System.Text.Json;
 
-
 namespace TP_Final_Programacion.Services
 {
     public class TransaccionesServices : ITransaccionesServices
     {
         private readonly AppDbContext _context;
         private readonly HttpClient _httpClient;
-    
+
         public TransaccionesServices(AppDbContext context, HttpClient httpClient)
         {
             _context = context;
             _httpClient = httpClient;
         }
 
+        // GET: Obtiene todas las transacciones ordenadas por fecha reciente
         public async Task<IEnumerable<Transactions>> Get()
         {
             return await _context.Transactions
@@ -26,12 +26,17 @@ namespace TP_Final_Programacion.Services
                 .ToListAsync();
         }
 
+        // GET BY ID: Obtiene una transacción específica por su ID mapeando a la Entidad
+        public async Task<Transactions?> GetByid(int id)
+        {
+            return await _context.Transactions.FirstOrDefaultAsync(n => n.Id == id);
+        }
+
+        // POST: Guarda una nueva transacción consultando la cotización en CryptoYa
         public async Task<Transactions> Post(TransactionsDTO transactionsDTO)
         {
             string cryptoCodeLower = transactionsDTO.CodigoCriptomoneda.ToLower();
-
             string urlCriptoya = $"https://criptoya.com/api/fiwind/{cryptoCodeLower}/ars";
-
             decimal precio = 0;
 
             try
@@ -53,7 +58,7 @@ namespace TP_Final_Programacion.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al consultar CryptoYa" + ex.Message);
+                throw new Exception("Error al consultar CryptoYa: " + ex.Message);
             }
 
             decimal TotalGastado = precio * transactionsDTO.CryptoAmount;
@@ -67,11 +72,52 @@ namespace TP_Final_Programacion.Services
                 Moneda = TotalGastado,
                 fecha = DateTime.UtcNow
             };
+
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
             return transaction;
-
         }
 
+        // PUT: Actualiza una transacción existente usando los datos del DTO
+        public async Task<bool> Put(int id, TransactionsDTO transactionsDTO)
+        {
+            if (id != transactionsDTO.Id)
+            {
+                return false;
+            }
+
+            var transaction = await _context.Transactions.FindAsync(id);
+            if (transaction == null)
+            {
+                return false;
+            }
+
+            // Mapeamos los cambios del DTO a la Entidad encontrada
+            transaction.codigoCriptomoneda = transactionsDTO.CodigoCriptomoneda;
+            transaction.accion = transactionsDTO.Accion;
+            transaction.ClienteId = transactionsDTO.ClienteId;
+            transaction.CryptoAmount = transactionsDTO.CryptoAmount;
+            transaction.Moneda = transactionsDTO.Moneda;
+            // Si querés mantener la fecha original de la BD no la cambies, o mapeala si viene del frontend:
+            transaction.fecha = transactionsDTO.Fecha;
+
+            _context.Entry(transaction).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // DELETE: Elimina físicamente el registro de la Base de Datos
+        public async Task<bool> Delete(int id)
+        {
+            var transactions = await _context.Transactions.FindAsync(id);
+            if (transactions == null)
+            {
+                return false;
+            }
+
+            _context.Transactions.Remove(transactions);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

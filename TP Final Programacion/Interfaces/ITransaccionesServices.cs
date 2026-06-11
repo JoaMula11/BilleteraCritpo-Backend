@@ -7,6 +7,9 @@ namespace TP_Final_Programacion.Interfaces
     {
         Task<IEnumerable<Transactions>> Get();
         Task<Transactions> Post(TransactionsDTO transactions);
+        Task<Transactions?> GetByid(int id);
+        Task<bool> Put(int id, TransactionsDTO transactions);
+        Task<bool> Delete(int id);
 
     }
 }
