@@ -1,0 +1,6 @@
+@TP_Final_Programacion_HostAddress = http://localhost:5269
+
+GET {{TP_Final_Programacion_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
