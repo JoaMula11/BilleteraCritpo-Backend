@@ -54,7 +54,7 @@ namespace TP_Final_Programacion.Controllers
                 return BadRequest();
             }
 
-            // El servicio devuelve un bool (true si se modificó, false si no se encontró)
+      
             bool modificado = await _transaccionesServices.Put(id, transactionsDTO);
 
             if (!modificado)
@@ -62,7 +62,7 @@ namespace TP_Final_Programacion.Controllers
                 return NotFound();
             }
 
-            return NoContent(); // Código 204 estándar para PUT exitoso sin contenido
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
@@ -82,11 +82,10 @@ namespace TP_Final_Programacion.Controllers
                     return NotFound();
                 }
 
-                return NoContent(); // Código 204 estándar para DELETE exitoso
+                return NoContent();
             }
             catch (Exception ex)
             {
-                // Captura errores de SQL (ej: claves foráneas) para evitar el Error 500
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { mensaje = "No se pudo eliminar la transacción. Verifique si está vinculada a otros datos.", detalle = ex.Message });
             }

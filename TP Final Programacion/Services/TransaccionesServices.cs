@@ -18,7 +18,6 @@ namespace TP_Final_Programacion.Services
             _httpClient = httpClient;
         }
 
-        // GET: Obtiene todas las transacciones ordenadas por fecha reciente
         public async Task<IEnumerable<Transactions>> Get()
         {
             return await _context.Transactions
@@ -26,13 +25,11 @@ namespace TP_Final_Programacion.Services
                 .ToListAsync();
         }
 
-        // GET BY ID: Obtiene una transacción específica por su ID mapeando a la Entidad
         public async Task<Transactions?> GetByid(int id)
         {
             return await _context.Transactions.FirstOrDefaultAsync(n => n.Id == id);
         }
 
-        // POST: Guarda una nueva transacción consultando la cotización en CryptoYa
         public async Task<Transactions> Post(TransactionsDTO transactionsDTO)
         {
             string cryptoCodeLower = transactionsDTO.CodigoCriptomoneda.ToLower();
@@ -78,7 +75,6 @@ namespace TP_Final_Programacion.Services
             return transaction;
         }
 
-        // PUT: Actualiza una transacción existente usando los datos del DTO
         public async Task<bool> Put(int id, TransactionsDTO transactionsDTO)
         {
             if (id != transactionsDTO.Id)
@@ -92,13 +88,12 @@ namespace TP_Final_Programacion.Services
                 return false;
             }
 
-            // Mapeamos los cambios del DTO a la Entidad encontrada
+
             transaction.codigoCriptomoneda = transactionsDTO.CodigoCriptomoneda;
             transaction.accion = transactionsDTO.Accion;
             transaction.ClienteId = transactionsDTO.ClienteId;
             transaction.CryptoAmount = transactionsDTO.CryptoAmount;
             transaction.Moneda = transactionsDTO.Moneda;
-            // Si querés mantener la fecha original de la BD no la cambies, o mapeala si viene del frontend:
             transaction.fecha = transactionsDTO.Fecha;
 
             _context.Entry(transaction).State = EntityState.Modified;
@@ -106,7 +101,6 @@ namespace TP_Final_Programacion.Services
             return true;
         }
 
-        // DELETE: Elimina físicamente el registro de la Base de Datos
         public async Task<bool> Delete(int id)
         {
             var transactions = await _context.Transactions.FindAsync(id);
